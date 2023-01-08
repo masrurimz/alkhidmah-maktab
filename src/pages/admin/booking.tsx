@@ -1,7 +1,8 @@
+import { Booking } from "../../libs/booking";
 import type { NextPageWithLayout } from "../_app";
 
-const Booking: NextPageWithLayout = () => {
-  return <div>booking</div>;
+const booking: NextPageWithLayout = () => {
+  return <Booking />;
 };
 
-export default Booking;
+export default booking;
