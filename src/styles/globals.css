@@ -28,3 +28,9 @@
 .layout {
   height: 100vh;
 }
+
+/* Fix NextJS & AntD white border bugs */
+* {
+  margin: 0;
+  padding: 0;
+}
