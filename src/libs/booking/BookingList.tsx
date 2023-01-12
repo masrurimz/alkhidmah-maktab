@@ -1,5 +1,6 @@
 import React from "react";
-import { Space, Table, Tag } from "antd";
+import { Button, Col, Row, Space, Table, Tag } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType, TableProps } from "antd/es/table";
 import { Booking as BookingList } from "@prisma/client";
 
@@ -86,8 +87,34 @@ const onChange: TableProps<BookingList>["onChange"] = (
   console.log("params", pagination, filters, sorter, extra);
 };
 
-const BookingList: React.FC = () => (
-  <Table columns={columns} dataSource={data} onChange={onChange} />
-);
+interface BookingListProps {
+  onPressAdd: () => void;
+}
+
+const BookingList: React.FC<BookingListProps> = (props) => {
+  const { onPressAdd } = props;
+
+  return (
+    <Space direction="vertical" size="small" className="w-full">
+      <Row justify="end">
+        <Button type="primary" icon={<PlusOutlined />} onClick={onPressAdd}>
+          Tambah
+        </Button>
+      </Row>
+      <Row>
+        <Col span={24}>
+          <Table
+            columns={columns}
+            dataSource={data}
+            onChange={onChange}
+            scroll={{
+              x: 1000,
+            }}
+          />
+        </Col>
+      </Row>
+    </Space>
+  );
+};
 
 export default BookingList;

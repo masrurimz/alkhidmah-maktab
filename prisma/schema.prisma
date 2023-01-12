@@ -14,12 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Example {
-  id        String   @id @default(cuid()) @map("_id")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 // Necessary for Next auth
 model Account {
   id                String  @id @default(cuid()) @map("_id")
@@ -37,6 +31,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
 
 model Session {
@@ -45,6 +40,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
 }
 
 model User {
@@ -55,6 +52,8 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
+
+  @@map("users")
 }
 
 model VerificationToken {
@@ -64,22 +63,26 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("verification_tokens")
 }
 
 model Booking {
   id        String        @id @default(cuid()) @map("_id") @db.ObjectId
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-  status    BookingStatus
+  status    BookingStatus @default(PENDING)
 
   personCount       Int
   bookingCode       String
   booker            Booker
   contingentAddress ContingentAddress
   contingentLeader  ContingentLeader
+  contingentVechile ContingentVechileType
 
   regionCoordinator   RegionCoordiator @relation(fields: [regionCoordinatorId], references: [id])
   regionCoordinatorId String           @db.ObjectId
+
+  @@map("bookings")
 }
 
 enum BookingStatus {
@@ -94,9 +97,18 @@ type Booker {
 }
 
 type ContingentAddress {
-  province String
-  city     String
-  district String
+  province ContingentAddressProvince
+  city     ContingentAddressCity
+}
+
+type ContingentAddressProvince {
+  id   String
+  name String
+}
+
+type ContingentAddressCity {
+  id   String
+  name String
 }
 
 type ContingentLeader {
@@ -110,4 +122,38 @@ model RegionCoordiator {
   phone String
 
   bookings Booking[]
+
+  @@map("region_coordinators")
+}
+
+enum ContingentVechileType {
+  CAR
+  BUS
+  TRUCK
+}
+
+model MasterRegionIndonesiaProvince {
+  id         String    @id @default(cuid()) @map("_id") @db.ObjectId
+  provinceId String    @unique @map("id")
+  name       String
+  regencies  Regency[]
+
+  @@map("master_region")
+}
+
+type Regency {
+  id        String
+  name      String
+  districts District[]
+}
+
+type District {
+  id       String
+  name     String
+  villages Village[]
+}
+
+type Village {
+  id   String
+  name String
 }
