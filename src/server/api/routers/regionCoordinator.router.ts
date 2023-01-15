@@ -37,6 +37,7 @@ export const regionCoordinatorRouter = createTRPCRouter({
       where: {
         name: {
           contains: input,
+          mode: "insensitive",
         },
       },
       select: {
