@@ -1,23 +1,33 @@
 import { CloseCircleTwoTone, PlusOutlined } from "@ant-design/icons";
 import { type Booking, ContingentVechileType } from "@prisma/client";
 import {
+  AutoComplete,
   Button,
   Card,
   Col,
+  Divider,
   Drawer,
   Form,
   Input,
   InputNumber,
+  InputRef,
   message,
+  RefSelectProps,
   Row,
   Select,
   Space,
+  Typography,
 } from "antd";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useDebounce } from "usehooks-ts";
 import { api } from "../../utils/api";
+import { checkIsValidObjectId } from "../common/utils/objectId";
 import { type BookingFormData } from "./booking.type";
+import { useBookingFormRegionData, useRegionCoordinatorData } from "./hooks";
+import SelectCustomOption from "./SelectCustomOption";
 
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 interface BookingFormProps {
   selectedBooking?: Booking;
@@ -33,7 +43,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
   const [form] = Form.useForm<BookingFormData>();
   const selectedProvince: string = Form.useWatch("province", form);
 
-  const { mutate } = api.booking.create.useMutation({
+  const { mutate, isLoading: isMutating } = api.booking.create.useMutation({
     onSuccess(data, variables, context) {
       messageApi.open({
         type: "success",
@@ -42,38 +52,29 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
     },
   });
 
-  const { data: provincies, isLoading: isProvinciesLoading } =
-    api.masterRegion.allProvince.useQuery();
-  const provinceData = useMemo(() => {
-    const province = provincies?.map((province) => ({
-      value: province.id,
-      label: province.name,
-    }));
+  const { selectCustomOptionNameProps, selectCustomOptionPhoneProps } =
+    useRegionCoordinatorData(form);
 
-    return province;
-  }, [provincies]);
-  const regenciesData = useMemo(() => {
-    if (selectedProvince) {
-      const regency = provincies?.find(
-        (province) => province.id === selectedProvince
-      )?.regencies;
-      console.log({ regency });
-
-      const regencyData = regency?.map((regency) => ({
-        value: regency.id,
-        label: regency.name,
-      }));
-
-      return regencyData;
-    }
-    return [];
-  }, [provincies, selectedProvince]);
-  useEffect(() => {
-    form.resetFields(["city"]);
-  }, [form, selectedProvince]);
+  const { provinceData, regenciesData, isProvinciesLoading } =
+    useBookingFormRegionData({
+      selectedProvince,
+      formInstance: form,
+    });
 
   const handleAddContingent = (value: BookingFormData) => {
-    if (value.contingents.length === 0 || !value.contingents[0]) {
+    const cityName = regenciesData?.find(
+      (regency) => regency.value === value.city
+    )?.label;
+    const provinceName = provinceData?.find(
+      (province) => province.value === value.province
+    )?.label;
+
+    if (
+      value.contingents.length === 0 ||
+      !value.contingents[0] ||
+      !cityName ||
+      !provinceName
+    ) {
       return;
     }
 
@@ -82,17 +83,28 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         name: value.bookerName,
         phone: value.bookerPhone,
       },
-      city: value.city,
+      city: {
+        id: value.city,
+        name: cityName,
+      },
+      province: {
+        id: value.province,
+        name: provinceName,
+      },
       contingent: value.contingents.map((contingent) => ({
-        personCount: contingent.personCount,
-        vechileType: ContingentVechileType.BUS,
         coordinator: {
           name: contingent.contingentCoordinatorName,
           phone: contingent.contingentCoordinatorPhone,
         },
+        personCount: contingent.personCount,
+        vechileType: contingent.vechileType,
       })),
-      province: value.province,
       regionCoordinator: {
+        id:
+          checkIsValidObjectId(value.regionCoordinatorName) &&
+          checkIsValidObjectId(value.regionCoordinatorPhone)
+            ? value.regionCoordinatorName
+            : undefined,
         name: value.regionCoordinatorName,
         phone: value.regionCoordinatorPhone,
       },
@@ -111,7 +123,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         extra={
           <Space>
             <Button onClick={onClose}>Batal</Button>
-            <Button onClick={form.submit} type="primary">
+            <Button onClick={form.submit} type="primary" loading={isMutating}>
               Simpan
             </Button>
           </Space>
@@ -191,7 +203,11 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                 >
                   <Select
                     showSearch
-                    placeholder="Silahkan pilih Provinsi"
+                    placeholder={
+                      !selectedProvince
+                        ? "Silahkan pilih Provinsi terlebih dahulu"
+                        : "Silahkan pilih Kabupaten/Kota"
+                    }
                     loading={isProvinciesLoading}
                     optionFilterProp="children"
                     filterOption={(input, option) =>
@@ -207,6 +223,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                         .localeCompare((optionB?.label ?? "").toLowerCase())
                     }
                     options={regenciesData}
+                    disabled={!selectedProvince}
                   />
                 </Form.Item>
               </Col>
@@ -224,7 +241,11 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                     },
                   ]}
                 >
-                  <Input placeholder="Silahkan masukkan nama Pemesan" />
+                  <SelectCustomOption
+                    showSearch
+                    placeholder="Masukkan/Pilih nama koordinator daerah"
+                    {...selectCustomOptionNameProps}
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
@@ -233,14 +254,32 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                   label="Nomor WA"
                   rules={[{ required: true, message: "Masukkan nomor WA" }]}
                 >
-                  <Input placeholder="08122334455" />
+                  <SelectCustomOption
+                    showSearch
+                    placeholder="08122334455"
+                    {...selectCustomOptionPhoneProps}
+                  />
                 </Form.Item>
               </Col>
             </Row>
           </Card>
           <h2>Rombongan</h2>
-          <Form.List name="contingents" initialValue={[]}>
-            {(fields, { add, remove }) => (
+          <Form.List
+            name="contingents"
+            initialValue={[]}
+            rules={[
+              {
+                async validator(_, value) {
+                  if (value.length === 0) {
+                    return Promise.reject(
+                      new Error("Silahkan tambahkan rombongan")
+                    );
+                  }
+                },
+              },
+            ]}
+          >
+            {(fields, { add, remove }, { errors }) => (
               <>
                 {fields.map((field) => (
                   <Card
@@ -296,7 +335,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                           ]}
                         >
                           <Select placeholder="Silahkan pilih jenis kendaraan">
-                            <Option key={1}>Bus</Option>
+                            <Option key="BUS">Bus</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -338,10 +377,11 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                     type="dashed"
                     onClick={() => add()}
                     icon={<PlusOutlined />}
-                    className="w-full"
+                    className="my-2 w-full"
                   >
                     Tambahkan Rombongan
                   </Button>
+                  <Form.ErrorList errors={errors} />
                 </Form.Item>
               </>
             )}

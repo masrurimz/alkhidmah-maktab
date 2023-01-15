@@ -1,8 +1,7 @@
 import { ContingentVechileType } from "@prisma/client";
-import { log } from "console";
 import { z } from "zod";
 
-import { createTRPCRouter, publicProcedure, protectedProcedure } from "../trpc";
+import { createTRPCRouter, publicProcedure } from "../trpc";
 
 export const bookingRouter = createTRPCRouter({
   create: publicProcedure
@@ -17,25 +16,36 @@ export const bookingRouter = createTRPCRouter({
           name: z.string(),
           phone: z.string(),
         }),
-        province: z.string(),
-        city: z.string(),
-        contingent: z.array(
-          z.object({
-            personCount: z.number().positive(),
-            vechileType: z.enum([
-              ContingentVechileType.BUS,
-              ContingentVechileType.CAR,
-              ContingentVechileType.TRUCK,
-            ]),
-            coordinator: z.object({
-              name: z.string(),
-              phone: z.string(),
-            }),
-          })
-        ),
+        province: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+        city: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+        contingent: z
+          .array(
+            z.object({
+              personCount: z.number().positive(),
+              vechileType: z.enum([
+                ContingentVechileType.BUS,
+                ContingentVechileType.CAR,
+                ContingentVechileType.TRUCK,
+              ]),
+              coordinator: z.object({
+                name: z.string(),
+                phone: z.string(),
+              }),
+            })
+          )
+          .nonempty(),
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const prefixWithZeros = (number: number, length = 2) =>
+        String(number).padStart(length, "0");
+
       const cityCount = await ctx.prisma.booking.count({
         where: {
           contingentAddress: {
@@ -46,37 +56,42 @@ export const bookingRouter = createTRPCRouter({
         },
       });
 
-      log({ cityCount });
-
-      // const booking = await ctx.prisma.booking.create({
-      //   data: {
-      //     booker: {
-      //       name: input.booker.name,
-      //       phone: input.booker.phone,
-      //     },
-      //     regionCoordinator: {
-      //       connectOrCreate: {
-      //         create: {
-      //           name: input.regionCoordinator.name,
-      //           phone: input.regionCoordinator.phone,
-      //           id: input.regionCoordinator.id,
-      //         },
-      //         where: {
-      //           id: input.regionCoordinator.id,
-      //         },
-      //       },
-      //     },
-      //     contingentAddress: {
-      //       city: input.city,
-      //       province: input.province,
-      //     },
-      //     bookingCode: `${input.city}_`
-
-      //   },
-      // });
+      const booking = await ctx.prisma.booking.create({
+        data: {
+          booker: {
+            name: input.booker.name,
+            phone: input.booker.phone,
+          },
+          regionCoordinator: {
+            connectOrCreate: {
+              // name: input.regionCoordinator.name,
+              // phone: input.regionCoordinator.phone,
+              create: {
+                name: input.regionCoordinator.name,
+                phone: input.regionCoordinator.phone,
+              },
+              where: {
+                id: input.regionCoordinator.id,
+              },
+            },
+          },
+          contingentAddress: {
+            city: input.city,
+            province: input.province,
+          },
+          bookingCode: `${input.city.name}_${prefixWithZeros(cityCount + 1)}`,
+          contingentLeader: {
+            name: input.contingent[0].coordinator.name,
+            phone: input.contingent[0].coordinator.phone,
+          },
+          contingentVechile: input.contingent[0].vechileType,
+          personCount: input.contingent[0].personCount,
+        },
+      });
 
       return {
         greeting: `Hello`,
+        booking,
       };
     }),
 
