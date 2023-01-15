@@ -75,14 +75,4 @@ export const masterRegionRouter = createTRPCRouter({
 
       return res;
     }),
-
-  cities: publicProcedure
-    .input(
-      z.object({
-        provinceId: z.string(),
-      })
-    )
-    .query(async ({ ctx }) => {
-      return await ctx.prisma.masterRegionIndonesia.findMany();
-    }),
 });

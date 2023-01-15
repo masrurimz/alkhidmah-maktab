@@ -1,5 +1,4 @@
 import { createTRPCRouter } from "./trpc";
-import { exampleRouter } from "./routers/example";
 import { bookingRouter } from "./routers/booking.router";
 import { masterRegionRouter } from "./routers/masterRegion.router";
 import { regionCoordinatorRouter } from "./routers/regionCoordinator.router";
@@ -11,7 +10,6 @@ import { regionCoordinatorRouter } from "./routers/regionCoordinator.router";
  */
 export const appRouter = createTRPCRouter({
   booking: bookingRouter,
-  example: exampleRouter,
   masterRegion: masterRegionRouter,
   regionCoordinator: regionCoordinatorRouter,
 });
