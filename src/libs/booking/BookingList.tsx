@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Col, Row, Space, Table, Tag } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType, TableProps } from "antd/es/table";
-import { Booking as BookingList } from "@prisma/client";
+import { Booking, Booking as BookingList } from "@prisma/client";
 
 const BookingStatusTagColorMap: Record<BookingList["status"], string> = {
   PENDING: "orange",
@@ -50,7 +50,7 @@ const columns: ColumnsType<BookingList> = [
   },
 ];
 
-const data = [
+const data: Booking[] = [
   {
     id: "1",
     booker: {
@@ -59,9 +59,14 @@ const data = [
     },
     bookingCode: "GSK_123",
     contingentAddress: {
-      city: "Gresik",
-      district: "Kebomas",
-      province: "Jawa Timur",
+      city: {
+        id: "1",
+        name: "Kebomas",
+      },
+      province: {
+        id: "1",
+        name: "Jawa Timur",
+      },
     },
     contingentLeader: {
       name: "John",
@@ -71,10 +76,8 @@ const data = [
     status: "PENDING",
     updatedAt: new Date(),
     personCount: 10,
-    regionCoordinator: {
-      name: "Elton",
-      phone: "1234567890",
-    },
+    contingentVechile: "BUS",
+    regionCoordinatorId: "1",
   },
 ];
 
