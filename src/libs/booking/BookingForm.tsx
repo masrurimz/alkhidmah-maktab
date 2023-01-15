@@ -12,9 +12,9 @@ import {
   Row,
   Select,
   Space,
-  Typography,
 } from "antd";
 import React from "react";
+import type { BookingCreateInput } from "../../server/api/routers/booking.router";
 import { api } from "../../utils/api";
 import { checkIsValidObjectId } from "../common/utils/objectId";
 import { type BookingFormData } from "./booking.type";
@@ -63,23 +63,29 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
       (province) => province.value === value.province
     )?.label;
 
-    if (
-      value.contingents.length === 0 ||
-      !value.contingents[0] ||
-      !cityName ||
-      !provinceName
-    ) {
-      return;
-    }
-
-    const contingent = value.contingents.map((contingent) => ({
+    const contingentArr = value.contingents.map((contingent) => ({
       coordinator: {
         name: contingent.contingentCoordinatorName,
         phone: contingent.contingentCoordinatorPhone,
       },
       personCount: contingent.personCount,
       vechileType: contingent.vechileType,
-    }));
+    })) as BookingCreateInput;
+
+    if (contingentArr.length === 0) {
+      return;
+    }
+
+    const contingents: BookingCreateInput = contingentArr;
+
+    if (
+      !(contingents.length > 0) ||
+      !value.contingents[0] ||
+      !cityName ||
+      !provinceName
+    ) {
+      return;
+    }
 
     mutate({
       booker: {
@@ -94,9 +100,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         id: value.province,
         name: provinceName,
       },
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      contingent,
+      contingent: contingents,
       regionCoordinator: {
         id:
           checkIsValidObjectId(value.regionCoordinatorName) &&

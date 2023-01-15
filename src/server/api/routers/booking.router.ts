@@ -3,6 +3,22 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
+const bookingCreateInput = z
+  .array(
+    z
+      .object({
+        personCount: z.number().positive(),
+        vechileType: z.nativeEnum(ContingentVechileType),
+        coordinator: z.object({
+          name: z.string(),
+          phone: z.string(),
+        }),
+      })
+      .required()
+  )
+  .nonempty();
+export type BookingCreateInput = z.infer<typeof bookingCreateInput>;
+
 export const bookingRouter = createTRPCRouter({
   create: publicProcedure
     .input(
@@ -24,21 +40,14 @@ export const bookingRouter = createTRPCRouter({
           id: z.string(),
           name: z.string(),
         }),
-        contingent: z
-          .array(
-            z.object({
-              personCount: z.number().positive(),
-              vechileType: z.nativeEnum(ContingentVechileType),
-              coordinator: z.object({
-                name: z.string(),
-                phone: z.string(),
-              }),
-            })
-          )
-          .nonempty(),
+        contingent: bookingCreateInput,
       })
     )
     .mutation(async ({ input, ctx }) => {
+      if (!input.contingent.length) {
+        throw new Error("Multiple contingents not supported yet");
+      }
+
       const prefixWithZeros = (number: number, length = 2) =>
         String(number).padStart(length, "0");
 
@@ -83,10 +92,7 @@ export const bookingRouter = createTRPCRouter({
         },
       });
 
-      return {
-        greeting: `Hello`,
-        booking,
-      };
+      return booking;
     }),
 
   // getAll: publicProcedure.query(({ ctx }) => {
