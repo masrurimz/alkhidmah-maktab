@@ -68,7 +68,7 @@ model VerificationToken {
 
 model Booking {
   id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime      @default(now())
+  createdAt DateTime      @unique @default(now())
   updatedAt DateTime      @updatedAt
   status    BookingStatus @default(PENDING)
 
@@ -117,9 +117,11 @@ type ContingentLeader {
 }
 
 model RegionCoordiator {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  name  String
-  phone String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  phone     String
+  createdAt DateTime @unique @default(now())
+  updatedAt DateTime @updatedAt
 
   bookings Booking[]
 

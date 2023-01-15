@@ -31,6 +31,7 @@ interface BookingFormProps {
 
 const BookingForm: React.FC<BookingFormProps> = (props) => {
   const { selectedBooking, onClose, open } = props;
+  const apiUtils = api.useContext();
 
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -43,6 +44,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         type: "success",
         content: "Berhasil menambahkan data Booking",
       });
+      apiUtils.booking.getAll.invalidate();
     },
   });
 

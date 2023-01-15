@@ -3,6 +3,7 @@ import { Button, Col, Row, Space, Table, Tag } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import type { ColumnsType, TableProps } from "antd/es/table";
 import { Booking, Booking as BookingList } from "@prisma/client";
+import { api } from "../../utils";
 
 const BookingStatusTagColorMap: Record<BookingList["status"], string> = {
   PENDING: "orange",
@@ -13,24 +14,28 @@ const BookingStatusTagColorMap: Record<BookingList["status"], string> = {
 const columns: ColumnsType<BookingList> = [
   {
     title: "No.",
-    dataIndex: "id",
+    dataIndex: "bookingCode",
     key: "id",
   },
   {
     title: "Kabupaten/Kota",
-    dataIndex: ["contingentAddress", "city"],
+    dataIndex: ["contingentAddress", "city", "name"],
+    key: "id",
   },
   {
     title: "Koor Rombongan",
     dataIndex: ["contingentLeader", "name"],
+    key: "id",
   },
   {
     title: "Koor Daerah",
     dataIndex: ["regionCoordinator", "name"],
+    key: "id",
   },
   {
     title: "Jumlah",
     dataIndex: "personCount",
+    key: "id",
   },
   {
     title: "Status",
@@ -38,6 +43,7 @@ const columns: ColumnsType<BookingList> = [
     render: (status: BookingList["status"]) => (
       <Tag color={BookingStatusTagColorMap[status]}>{status}</Tag>
     ),
+    key: "id",
   },
   {
     title: "Action",
@@ -50,36 +56,36 @@ const columns: ColumnsType<BookingList> = [
   },
 ];
 
-const data: Booking[] = [
-  {
-    id: "1",
-    booker: {
-      name: "Joe",
-      phone: "1234567890",
-    },
-    bookingCode: "GSK_123",
-    contingentAddress: {
-      city: {
-        id: "1",
-        name: "Kebomas",
-      },
-      province: {
-        id: "1",
-        name: "Jawa Timur",
-      },
-    },
-    contingentLeader: {
-      name: "John",
-      phone: "1234567890",
-    },
-    createdAt: new Date(),
-    status: "PENDING",
-    updatedAt: new Date(),
-    personCount: 10,
-    contingentVechile: "BUS",
-    regionCoordinatorId: "1",
-  },
-];
+// const data: Booking[] = [
+//   {
+//     id: "1",
+//     booker: {
+//       name: "Joe",
+//       phone: "1234567890",
+//     },
+//     bookingCode: "GSK_123",
+//     contingentAddress: {
+//       city: {
+//         id: "1",
+//         name: "Kebomas",
+//       },
+//       province: {
+//         id: "1",
+//         name: "Jawa Timur",
+//       },
+//     },
+//     contingentLeader: {
+//       name: "John",
+//       phone: "1234567890",
+//     },
+//     createdAt: new Date(),
+//     status: "PENDING",
+//     updatedAt: new Date(),
+//     personCount: 10,
+//     contingentVechile: "BUS",
+//     regionCoordinatorId: "1",
+//   },
+// ];
 
 const onChange: TableProps<BookingList>["onChange"] = (
   pagination,
@@ -97,6 +103,11 @@ interface BookingListProps {
 const BookingList: React.FC<BookingListProps> = (props) => {
   const { onPressAdd } = props;
 
+  const { data, isLoading } = api.booking.getAll.useQuery({
+    limit: 10,
+    skip: 0,
+  });
+
   return (
     <Space direction="vertical" size="small" className="w-full">
       <Row justify="end">
@@ -108,11 +119,12 @@ const BookingList: React.FC<BookingListProps> = (props) => {
         <Col span={24}>
           <Table
             columns={columns}
-            dataSource={data}
+            dataSource={data?.items}
             onChange={onChange}
             scroll={{
               x: 1000,
             }}
+            loading={isLoading}
           />
         </Col>
       </Row>

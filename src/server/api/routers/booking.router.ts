@@ -68,14 +68,9 @@ export const bookingRouter = createTRPCRouter({
             phone: input.booker.phone,
           },
           regionCoordinator: {
-            connectOrCreate: {
-              create: {
-                name: input.regionCoordinator.name,
-                phone: input.regionCoordinator.phone,
-              },
-              where: {
-                id: input.regionCoordinator.id,
-              },
+            create: {
+              name: input.regionCoordinator.name,
+              phone: input.regionCoordinator.phone,
             },
           },
           contingentAddress: {
@@ -95,9 +90,34 @@ export const bookingRouter = createTRPCRouter({
       return booking;
     }),
 
-  // getAll: publicProcedure.query(({ ctx }) => {
-  //   return ctx.prisma.example.findMany();
-  // }),
+  getAll: publicProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).optional().default(50),
+        skip: z.number().optional().default(0), // <-- "cursor" needs to exist, but can be any type
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const { limit = 50, skip = 0 } = input;
+
+      const items = await ctx.prisma.booking.findMany({
+        take: limit + 1, // get an extra item at the end which we'll use as next cursor
+        skip: skip ?? 0,
+        include: {
+          regionCoordinator: true,
+        },
+      });
+
+      let nextSkip: typeof skip | undefined = undefined;
+      if (items.length > limit) {
+        nextSkip = skip + limit;
+      }
+
+      return {
+        items,
+        nextSkip,
+      };
+    }),
 
   // getSecretMessage: protectedProcedure.query(() => {
   //   return "you can now see this secret message!";
