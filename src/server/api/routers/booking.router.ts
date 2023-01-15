@@ -28,11 +28,7 @@ export const bookingRouter = createTRPCRouter({
           .array(
             z.object({
               personCount: z.number().positive(),
-              vechileType: z.enum([
-                ContingentVechileType.BUS,
-                ContingentVechileType.CAR,
-                ContingentVechileType.TRUCK,
-              ]),
+              vechileType: z.nativeEnum(ContingentVechileType),
               coordinator: z.object({
                 name: z.string(),
                 phone: z.string(),
@@ -64,8 +60,6 @@ export const bookingRouter = createTRPCRouter({
           },
           regionCoordinator: {
             connectOrCreate: {
-              // name: input.regionCoordinator.name,
-              // phone: input.regionCoordinator.phone,
               create: {
                 name: input.regionCoordinator.name,
                 phone: input.regionCoordinator.phone,

@@ -1,25 +1,20 @@
 import { CloseCircleTwoTone, PlusOutlined } from "@ant-design/icons";
-import { type Booking, ContingentVechileType } from "@prisma/client";
+import { type Booking } from "@prisma/client";
 import {
-  AutoComplete,
   Button,
   Card,
   Col,
-  Divider,
   Drawer,
   Form,
   Input,
   InputNumber,
-  InputRef,
   message,
-  RefSelectProps,
   Row,
   Select,
   Space,
   Typography,
 } from "antd";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useDebounce } from "usehooks-ts";
+import React from "react";
 import { api } from "../../utils/api";
 import { checkIsValidObjectId } from "../common/utils/objectId";
 import { type BookingFormData } from "./booking.type";
@@ -27,7 +22,6 @@ import { useBookingFormRegionData, useRegionCoordinatorData } from "./hooks";
 import SelectCustomOption from "./SelectCustomOption";
 
 const { Option } = Select;
-const { Title, Text } = Typography;
 
 interface BookingFormProps {
   selectedBooking?: Booking;
@@ -78,6 +72,15 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
       return;
     }
 
+    const contingent = value.contingents.map((contingent) => ({
+      coordinator: {
+        name: contingent.contingentCoordinatorName,
+        phone: contingent.contingentCoordinatorPhone,
+      },
+      personCount: contingent.personCount,
+      vechileType: contingent.vechileType,
+    }));
+
     mutate({
       booker: {
         name: value.bookerName,
@@ -91,14 +94,9 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         id: value.province,
         name: provinceName,
       },
-      contingent: value.contingents.map((contingent) => ({
-        coordinator: {
-          name: contingent.contingentCoordinatorName,
-          phone: contingent.contingentCoordinatorPhone,
-        },
-        personCount: contingent.personCount,
-        vechileType: contingent.vechileType,
-      })),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      contingent,
       regionCoordinator: {
         id:
           checkIsValidObjectId(value.regionCoordinatorName) &&
