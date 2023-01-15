@@ -1,4 +1,4 @@
-import { ContingentVechileType } from "@prisma/client";
+import { Booking, ContingentVechileType } from "@prisma/client";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -61,31 +61,49 @@ export const bookingRouter = createTRPCRouter({
         },
       });
 
-      const booking = await ctx.prisma.booking.create({
-        data: {
-          booker: {
-            name: input.booker.name,
-            phone: input.booker.phone,
+      const data = {
+        booker: {
+          name: input.booker.name,
+          phone: input.booker.phone,
+        },
+        regionCoordinator: {
+          create: {
+            name: input.regionCoordinator.name,
+            phone: input.regionCoordinator.phone,
           },
-          regionCoordinator: {
-            create: {
-              name: input.regionCoordinator.name,
-              phone: input.regionCoordinator.phone,
+        },
+        contingentAddress: {
+          city: input.city,
+          province: input.province,
+        },
+        bookingCode: `${input.city.name}_${prefixWithZeros(cityCount + 1)}`,
+        contingentLeader: {
+          name: input.contingent[0].coordinator.name,
+          phone: input.contingent[0].coordinator.phone,
+        },
+        contingentVechile: input.contingent[0].vechileType,
+        personCount: input.contingent[0].personCount,
+      };
+      let booking: Booking | undefined = undefined;
+
+      if (input.regionCoordinator.id) {
+        booking = await ctx.prisma.booking.create({
+          data: {
+            ...data,
+            regionCoordinator: {
+              connect: {
+                id: input.regionCoordinator.id,
+              },
             },
           },
-          contingentAddress: {
-            city: input.city,
-            province: input.province,
+        });
+      } else {
+        booking = await ctx.prisma.booking.create({
+          data: {
+            ...data,
           },
-          bookingCode: `${input.city.name}_${prefixWithZeros(cityCount + 1)}`,
-          contingentLeader: {
-            name: input.contingent[0].coordinator.name,
-            phone: input.contingent[0].coordinator.phone,
-          },
-          contingentVechile: input.contingent[0].vechileType,
-          personCount: input.contingent[0].personCount,
-        },
-      });
+        });
+      }
 
       return booking;
     }),
