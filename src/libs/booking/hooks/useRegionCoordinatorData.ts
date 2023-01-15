@@ -56,7 +56,18 @@ export const useRegionCoordinatorData = (
   const isSameEntity =
     isSelectedNameUuid && isSelectedPhoneUuid && selectedName === selectedPhone;
 
+  const selectCustomOptionDefaultProps: Partial<SelectCustomOptionProps> = {
+    filterOption: (input, option) => {
+      if (typeof option?.label !== "string") {
+        return false;
+      }
+
+      return option.label.toLowerCase().includes(input.toLowerCase());
+    },
+  };
+
   const selectCustomOptionNameProps: SelectCustomOptionProps = {
+    ...selectCustomOptionDefaultProps,
     loading: isRegionCoordinatorNamesLoading,
     options: regionCoordinatorNames?.map((c) => ({
       label: c.name,
@@ -88,6 +99,7 @@ export const useRegionCoordinatorData = (
   };
 
   const selectCustomOptionPhoneProps: SelectCustomOptionProps = {
+    ...selectCustomOptionDefaultProps,
     loading: isRegionCoordinatorPhonesLoading,
     options: regionCoordinatorPhones?.map((c) => ({
       label: c.phone,
