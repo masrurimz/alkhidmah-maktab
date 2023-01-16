@@ -160,6 +160,87 @@ export const bookingRouter = createTRPCRouter({
       return booking;
     }),
 
+  update: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        booker: z.object({
+          name: z.string(),
+          phone: z.string(),
+        }),
+        regionCoordinator: z.object({
+          id: z.string().optional(),
+          name: z.string(),
+          phone: z.string(),
+        }),
+        province: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+        city: z.object({
+          id: z.string(),
+          name: z.string(),
+        }),
+        contingent: bookingCreateInput,
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (input.contingent.length > 1) {
+        throw new Error("Multiple contingents not supported yet");
+      }
+
+      const data = {
+        booker: {
+          name: input.booker.name,
+          phone: input.booker.phone,
+        },
+        regionCoordinator: {
+          create: {
+            name: input.regionCoordinator.name,
+            phone: input.regionCoordinator.phone,
+          },
+        },
+        contingentAddress: {
+          city: input.city,
+          province: input.province,
+        },
+        contingentLeader: {
+          name: input.contingent[0].coordinator.name,
+          phone: input.contingent[0].coordinator.phone,
+        },
+        contingentVechile: input.contingent[0].vechileType,
+        personCount: input.contingent[0].personCount,
+      };
+      let booking: Booking | undefined = undefined;
+
+      if (input.regionCoordinator.id) {
+        booking = await ctx.prisma.booking.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            ...data,
+            regionCoordinator: {
+              connect: {
+                id: input.regionCoordinator.id,
+              },
+            },
+          },
+        });
+      } else {
+        booking = await ctx.prisma.booking.update({
+          where: {
+            id: input.id,
+          },
+          data: {
+            ...data,
+          },
+        });
+      }
+
+      return booking;
+    }),
+
   // getSecretMessage: protectedProcedure.query(() => {
   //   return "you can now see this secret message!";
   // }),

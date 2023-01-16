@@ -33,15 +33,28 @@ const BookingForm: React.FC = () => {
 
   const [form] = Form.useForm<BookingFormData>();
 
-  const { mutate, isLoading: isMutating } = api.booking.create.useMutation({
-    onSuccess(data, variables, context) {
+  const onSubmitSuccess = () => {
+    apiUtils.booking.getAll.invalidate();
+    form.resetFields();
+    onClose();
+  };
+
+  const createBooking = api.booking.create.useMutation({
+    onSuccess() {
       messageApi.open({
         type: "success",
         content: "Berhasil menambahkan data Booking",
       });
-      apiUtils.booking.getAll.invalidate();
-      form.resetFields();
-      onClose();
+      onSubmitSuccess();
+    },
+  });
+  const updateBooking = api.booking.update.useMutation({
+    onSuccess() {
+      messageApi.open({
+        type: "success",
+        content: "Berhasil memperbarui data Booking",
+      });
+      onSubmitSuccess();
     },
   });
 
@@ -51,7 +64,7 @@ const BookingForm: React.FC = () => {
   const { provinceData, regenciesData, selectedProvince, isProvinciesLoading } =
     useBookingFormRegionData(form);
 
-  const handleAddContingent = (value: BookingFormData) => {
+  const handleSubmit = (value: BookingFormData) => {
     const cityName = regenciesData?.find(
       (regency) => regency.value === value.city
     )?.label;
@@ -83,7 +96,7 @@ const BookingForm: React.FC = () => {
       return;
     }
 
-    mutate({
+    const data = {
       booker: {
         name: value.bookerName,
         phone: value.bookerPhone,
@@ -106,7 +119,16 @@ const BookingForm: React.FC = () => {
         name: value.regionCoordinatorName,
         phone: value.regionCoordinatorPhone,
       },
-    });
+    };
+
+    if (selectedBookingId) {
+      return updateBooking.mutate({
+        id: selectedBookingId,
+        ...data,
+      });
+    }
+
+    createBooking.mutate(data);
   };
 
   const selectedBookingId = useBookingStore((state) => state.selectedBookingId);
@@ -189,8 +211,12 @@ const BookingForm: React.FC = () => {
         extra={
           <Space>
             <Button onClick={onClose}>Batal</Button>
-            <Button onClick={form.submit} type="primary" loading={isMutating}>
-              Simpan
+            <Button
+              onClick={form.submit}
+              type="primary"
+              loading={createBooking.isLoading || updateBooking.isLoading}
+            >
+              {selectedBookingId ? "Ubah" : "Tambah"}
             </Button>
           </Space>
         }
@@ -199,7 +225,7 @@ const BookingForm: React.FC = () => {
           layout="vertical"
           requiredMark={false}
           form={form}
-          onFinish={handleAddContingent}
+          onFinish={handleSubmit}
         >
           <h4 className="mb-1">Data Pemesan</h4>
           <Row gutter={12}>
