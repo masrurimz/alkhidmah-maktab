@@ -45,6 +45,8 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         content: "Berhasil menambahkan data Booking",
       });
       apiUtils.booking.getAll.invalidate();
+      form.resetFields();
+      onClose();
     },
   });
 
