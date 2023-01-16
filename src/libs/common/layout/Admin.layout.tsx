@@ -6,6 +6,7 @@ import {
 import { Breadcrumb, Layout, Menu, theme } from "antd";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
+import { useWindowSize } from "usehooks-ts";
 
 const { Header, Sider, Content } = Layout;
 
@@ -20,7 +21,13 @@ const AdminAppLayout: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <Layout className="h-screen">
-      <Sider trigger={null} collapsible collapsed={collapsed}>
+      <Sider
+        breakpoint="lg"
+        collapsedWidth={useWindowSize().width < 768 ? 0 : 80}
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+      >
         <h1 className="ml-8 text-white">Maktab</h1>
         <Menu
           theme="dark"
