@@ -376,17 +376,19 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
                     </Row>
                   </Card>
                 ))}
-                <Form.Item>
-                  <Button
-                    type="dashed"
-                    onClick={() => add()}
-                    icon={<PlusOutlined />}
-                    className="my-2 w-full"
-                  >
-                    Tambahkan Rombongan
-                  </Button>
-                  <Form.ErrorList errors={errors} />
-                </Form.Item>
+                {fields.length <= 0 ? (
+                  <Form.Item>
+                    <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      icon={<PlusOutlined />}
+                      className="my-2 w-full"
+                    >
+                      Tambahkan Rombongan
+                    </Button>
+                  </Form.Item>
+                ) : null}
+                <Form.ErrorList errors={errors} />
               </>
             )}
           </Form.List>
