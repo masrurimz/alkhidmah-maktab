@@ -1,8 +1,8 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
 import { Booking as BookingList } from "@prisma/client";
-import { Button, Col, Popconfirm, Row, Space, Table, Tag } from "antd";
+import { Button, Col, message, Popconfirm, Row, Space, Table, Tag } from "antd";
 import type { ColumnsType, TableProps } from "antd/es/table";
-import React from "react";
+import React, { useState } from "react";
 import { api } from "../../utils";
 import { useBookingStore } from "./booking.store";
 
@@ -23,6 +23,21 @@ const onChange: TableProps<BookingList>["onChange"] = (
 
 const BookingList: React.FC = () => {
   const openForm = useBookingStore((state) => state.openBookingForm);
+  const apiUtils = api.useContext();
+  const [messageApi, contextHolder] = message.useMessage();
+  const deleteBooking = api.booking.delete.useMutation({
+    onSuccess: () => {
+      messageApi.open({
+        type: "success",
+        content: "Berhasil menghapus data Booking",
+      });
+      apiUtils.booking.invalidate();
+    },
+  });
+
+  const [popconfirmVisibility, setPopconfirmVisibility] = useState<
+    Record<string, boolean>
+  >({});
 
   const { data, isLoading } = api.booking.getAll.useQuery({
     limit: 10,
@@ -80,8 +95,24 @@ const BookingList: React.FC = () => {
             description="Apakah anda yakin ingin menghapus data booking ini ?"
             okText="Hapus"
             cancelText="Batal"
+            onConfirm={async (e) => {
+              e?.preventDefault();
+              await deleteBooking.mutateAsync({
+                id: record.id,
+              });
+              setPopconfirmVisibility({ [record.id]: false });
+            }}
+            okButtonProps={{
+              loading: deleteBooking.isLoading,
+            }}
+            open={popconfirmVisibility[record.id]}
           >
-            <Button type="link" icon={<DeleteOutlined />} danger />
+            <Button
+              type="link"
+              icon={<DeleteOutlined />}
+              danger
+              onClick={() => setPopconfirmVisibility({ [record.id]: true })}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -89,30 +120,33 @@ const BookingList: React.FC = () => {
   ];
 
   return (
-    <Space direction="vertical" size="small" className="w-full">
-      <Row justify="end">
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => openForm()}
-        >
-          Tambah
-        </Button>
-      </Row>
-      <Row>
-        <Col span={24}>
-          <Table
-            columns={columns}
-            dataSource={data?.items}
-            onChange={onChange}
-            scroll={{
-              x: 1000,
-            }}
-            loading={isLoading}
-          />
-        </Col>
-      </Row>
-    </Space>
+    <>
+      {contextHolder}
+      <Space direction="vertical" size="small" className="w-full">
+        <Row justify="end">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => openForm()}
+          >
+            Tambah
+          </Button>
+        </Row>
+        <Row>
+          <Col span={24}>
+            <Table
+              columns={columns}
+              dataSource={data?.items}
+              onChange={onChange}
+              scroll={{
+                x: 1000,
+              }}
+              loading={isLoading}
+            />
+          </Col>
+        </Row>
+      </Space>
+    </>
   );
 };
 

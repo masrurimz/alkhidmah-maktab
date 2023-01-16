@@ -241,6 +241,22 @@ export const bookingRouter = createTRPCRouter({
       return booking;
     }),
 
+  delete: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const booking = await ctx.prisma.booking.delete({
+        where: {
+          id: input.id,
+        },
+      });
+
+      return booking;
+    }),
+
   // getSecretMessage: protectedProcedure.query(() => {
   //   return "you can now see this secret message!";
   // }),
