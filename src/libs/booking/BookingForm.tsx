@@ -1,5 +1,4 @@
 import { CloseCircleTwoTone, PlusOutlined } from "@ant-design/icons";
-import { type Booking } from "@prisma/client";
 import {
   Button,
   Card,
@@ -13,30 +12,26 @@ import {
   Select,
   Space,
 } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import type { BookingCreateInput } from "../../server/api/routers/booking.router";
 import { api } from "../../utils/api";
 import { checkIsValidObjectId } from "../common/utils/objectId";
+import { useBookingStore } from "./booking.store";
 import { type BookingFormData } from "./booking.type";
 import { useBookingFormRegionData, useRegionCoordinatorData } from "./hooks";
 import SelectCustomOption from "./SelectCustomOption";
 
 const { Option } = Select;
 
-interface BookingFormProps {
-  selectedBooking?: Booking;
-  open: boolean;
-  onClose: () => void;
-}
+const BookingForm: React.FC = () => {
+  const isVisible = useBookingStore((state) => state.isBookingFormOpen);
+  const onClose = useBookingStore((state) => state.closeBookingForm);
 
-const BookingForm: React.FC<BookingFormProps> = (props) => {
-  const { selectedBooking, onClose, open } = props;
   const apiUtils = api.useContext();
 
   const [messageApi, contextHolder] = message.useMessage();
 
   const [form] = Form.useForm<BookingFormData>();
-  const selectedProvince: string = Form.useWatch("province", form);
 
   const { mutate, isLoading: isMutating } = api.booking.create.useMutation({
     onSuccess(data, variables, context) {
@@ -53,11 +48,8 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
   const { selectCustomOptionNameProps, selectCustomOptionPhoneProps } =
     useRegionCoordinatorData(form);
 
-  const { provinceData, regenciesData, isProvinciesLoading } =
-    useBookingFormRegionData({
-      selectedProvince,
-      formInstance: form,
-    });
+  const { provinceData, regenciesData, selectedProvince, isProvinciesLoading } =
+    useBookingFormRegionData(form);
 
   const handleAddContingent = (value: BookingFormData) => {
     const cityName = regenciesData?.find(
@@ -117,6 +109,74 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
     });
   };
 
+  const selectedBookingId = useBookingStore((state) => state.selectedBookingId);
+  const { data: booking } = api.booking.byId.useQuery(
+    { id: String(selectedBookingId) },
+    {
+      enabled: !!selectedBookingId,
+      onSettled(data, error) {
+        if (error) {
+          messageApi.open({
+            type: "error",
+            content: "Gagal memuat data Booking",
+          });
+        }
+
+        if (data) {
+          const {
+            booker,
+            contingentAddress,
+            contingentLeader,
+            contingentVechile,
+            personCount,
+            regionCoordinator,
+          } = data;
+
+          form.setFieldsValue({
+            bookerName: booker.name,
+            bookerPhone: booker.phone,
+            city: contingentAddress.city.id,
+            province: contingentAddress.province.id,
+            contingents: [
+              {
+                contingentCoordinatorName: contingentLeader.name,
+                contingentCoordinatorPhone: contingentLeader.phone,
+                personCount,
+                vechileType: contingentVechile,
+              },
+            ],
+            regionCoordinatorName: regionCoordinator.name,
+            regionCoordinatorPhone: regionCoordinator.phone,
+          });
+        }
+      },
+    }
+  );
+  useEffect(() => {
+    if (
+      selectedBookingId &&
+      selectedProvince &&
+      booking?.contingentAddress.city.id
+    ) {
+      form.setFieldValue("city", booking.contingentAddress.city.id);
+    }
+  }, [
+    booking?.contingentAddress.city.id,
+    form,
+    selectedBookingId,
+    selectedProvince,
+  ]);
+
+  const clearSelectedBookingId = useBookingStore(
+    (state) => state.clearSelectedBookingId
+  );
+  useEffect(() => {
+    if (!isVisible) {
+      clearSelectedBookingId();
+      form.resetFields();
+    }
+  }, [selectedBookingId, clearSelectedBookingId, form, isVisible]);
+
   return (
     <>
       {contextHolder}
@@ -124,7 +184,7 @@ const BookingForm: React.FC<BookingFormProps> = (props) => {
         title="Tambahkan data Booking"
         width={720}
         onClose={onClose}
-        open={open}
+        open={isVisible}
         bodyStyle={{ paddingBottom: 80 }}
         extra={
           <Space>

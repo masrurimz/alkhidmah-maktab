@@ -1,13 +1,12 @@
-import type { FormInstance } from "antd";
+import { Form, type FormInstance } from "antd";
 import { useEffect, useMemo } from "react";
 import { api } from "../../../utils";
 import type { BookingFormData } from "../booking.type";
 
-export const useBookingFormRegionData = (props: {
-  selectedProvince: string;
-  formInstance: FormInstance<BookingFormData>;
-}) => {
-  const { formInstance: form, selectedProvince } = props;
+export const useBookingFormRegionData = (
+  form: FormInstance<BookingFormData>
+) => {
+  const selectedProvince: string = Form.useWatch("province", form);
 
   const { data: provincies, isLoading: isProvinciesLoading } =
     api.masterRegion.allProvince.useQuery();
@@ -45,6 +44,7 @@ export const useBookingFormRegionData = (props: {
   return {
     provinceData,
     regenciesData,
+    selectedProvince,
     isProvinciesLoading,
   };
 };

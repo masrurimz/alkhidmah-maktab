@@ -137,6 +137,29 @@ export const bookingRouter = createTRPCRouter({
       };
     }),
 
+  byId: publicProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const booking = await ctx.prisma.booking.findUnique({
+        where: {
+          id: input.id,
+        },
+        include: {
+          regionCoordinator: true,
+        },
+      });
+
+      if (!booking) {
+        throw new Error("Booking not found");
+      }
+
+      return booking;
+    }),
+
   // getSecretMessage: protectedProcedure.query(() => {
   //   return "you can now see this secret message!";
   // }),
