@@ -13,6 +13,7 @@ import {
   Space,
 } from "antd";
 import React, { useEffect } from "react";
+import { useWindowSize } from "usehooks-ts";
 import type { BookingCreateInput } from "../../server/api/routers/booking.router";
 import { api } from "../../utils/api";
 import { checkIsValidObjectId } from "../common/utils/objectId";
@@ -199,12 +200,18 @@ const BookingForm: React.FC = () => {
     }
   }, [selectedBookingId, clearSelectedBookingId, form, isVisible]);
 
+  const colProps = {
+    xs: 24,
+    md: 12,
+  };
+  const { width } = useWindowSize();
+
   return (
     <>
       {contextHolder}
       <Drawer
         title="Tambahkan data Booking"
-        width={720}
+        width={width > 768 ? 720 : "100%"}
         onClose={onClose}
         open={isVisible}
         bodyStyle={{ paddingBottom: 80 }}
@@ -229,7 +236,7 @@ const BookingForm: React.FC = () => {
         >
           <h4 className="mb-1">Data Pemesan</h4>
           <Row gutter={12}>
-            <Col span={12}>
+            <Col {...colProps}>
               <Form.Item
                 name="bookerName"
                 label="Nama"
@@ -240,7 +247,7 @@ const BookingForm: React.FC = () => {
                 <Input placeholder="Silahkan masukkan nama Pemesan" />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col {...colProps}>
               <Form.Item
                 name="bookerPhone"
                 label="Nomor WA"
@@ -253,7 +260,7 @@ const BookingForm: React.FC = () => {
           <Card className="my-2">
             <h4 className="mb-1">Daerah Asal</h4>
             <Row gutter={12}>
-              <Col span={12}>
+              <Col {...colProps}>
                 <Form.Item
                   name="province"
                   label="Provinsi"
@@ -282,7 +289,7 @@ const BookingForm: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col {...colProps}>
                 <Form.Item
                   name="city"
                   label="Kabupaten/Kota"
@@ -322,7 +329,7 @@ const BookingForm: React.FC = () => {
             </Row>
             <h4 className="mb-1">Koordinator Wilayah</h4>
             <Row gutter={12}>
-              <Col span={12}>
+              <Col {...colProps}>
                 <Form.Item
                   name="regionCoordinatorName"
                   label="Nama"
@@ -340,7 +347,7 @@ const BookingForm: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
+              <Col {...colProps}>
                 <Form.Item
                   name="regionCoordinatorPhone"
                   label="Nomor WA"
@@ -390,7 +397,7 @@ const BookingForm: React.FC = () => {
                     }
                   >
                     <Row gutter={12}>
-                      <Col span={12}>
+                      <Col {...colProps}>
                         <Form.Item
                           {...field}
                           name={[field.name, "personCount"]}
@@ -414,7 +421,7 @@ const BookingForm: React.FC = () => {
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col {...colProps}>
                         <Form.Item
                           {...field}
                           name={[field.name, "vechileType"]}
@@ -434,7 +441,7 @@ const BookingForm: React.FC = () => {
                     </Row>
                     <h4 className="mb-1">Koordinator Rombongan</h4>
                     <Row gutter={12}>
-                      <Col span={12}>
+                      <Col {...colProps}>
                         <Form.Item
                           {...field}
                           name={[field.name, "contingentCoordinatorName"]}
@@ -449,7 +456,7 @@ const BookingForm: React.FC = () => {
                           <Input placeholder="Silahkan masukkan nama Pemesan" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col {...colProps}>
                         <Form.Item
                           {...field}
                           name={[field.name, "contingentCoordinatorPhone"]}
