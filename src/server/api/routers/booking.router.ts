@@ -1,4 +1,4 @@
-import { Booking, ContingentVechileType } from "@prisma/client";
+import { type Booking, ContingentVechileType } from "@prisma/client";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
