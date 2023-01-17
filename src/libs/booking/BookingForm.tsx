@@ -12,8 +12,8 @@ import {
   Select,
   Space,
 } from "antd";
-import React, { useEffect } from "react";
-import { useWindowSize } from "usehooks-ts";
+import React, { useEffect, useState } from "react";
+import { useDebounce, useWindowSize } from "usehooks-ts";
 import type { BookingCreateInput } from "../../server/api/routers/booking.router";
 import { api } from "../../utils/api";
 import { checkIsValidObjectId } from "../common/utils/objectId";
@@ -80,6 +80,7 @@ const BookingForm: React.FC = () => {
       },
       personCount: contingent.personCount,
       vechileType: contingent.vechileType,
+      name: contingent.name,
     })) as BookingCreateInput;
 
     if (contingentArr.length === 0) {
@@ -205,6 +206,12 @@ const BookingForm: React.FC = () => {
     md: 12,
   };
   const { width } = useWindowSize();
+
+  const [contingentNameQuery, setContingentNameQuery] = useState("");
+  const debounceContingentNameQuery = useDebounce(contingentNameQuery, 300);
+  const contingentNames = api.booking.filterContingentName.useQuery({
+    name: debounceContingentNameQuery,
+  });
 
   return (
     <>
@@ -382,6 +389,7 @@ const BookingForm: React.FC = () => {
               <>
                 {fields.map((field) => (
                   <Card
+                    id={String(field.key)}
                     className="my-2"
                     key={field.key}
                     extra={
@@ -396,6 +404,47 @@ const BookingForm: React.FC = () => {
                       ) : null
                     }
                   >
+                    <Row>
+                      <Col span={24}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "name"]}
+                          label="Nama Rombongan"
+                          rules={[
+                            {
+                              required: true,
+                              message: "Silahkan masukkan nama rombongan",
+                            },
+                          ]}
+                        >
+                          <SelectCustomOption
+                            showSearch
+                            placeholder="Masukkan/Pilih nama rombongan"
+                            onClickDropdownAdd={() => {
+                              const data: Partial<BookingFormData> = {
+                                contingents: [
+                                  {
+                                    ...form.getFieldValue("contingents")[0],
+                                    name: debounceContingentNameQuery,
+                                  },
+                                ],
+                              };
+
+                              console.log(data);
+
+                              form.setFieldsValue(data);
+                            }}
+                            searchQuery={debounceContingentNameQuery}
+                            options={contingentNames.data?.map((c) => ({
+                              label: c.contingentName,
+                              value: c.contingentName,
+                            }))}
+                            onSearch={setContingentNameQuery}
+                            loading={contingentNames.isLoading}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
                     <Row gutter={12}>
                       <Col {...colProps}>
                         <Form.Item

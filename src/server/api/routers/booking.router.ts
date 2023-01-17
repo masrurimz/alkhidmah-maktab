@@ -1,4 +1,4 @@
-import { type Booking, ContingentVechileType } from "@prisma/client";
+import { ContingentVechileType, type Booking } from "@prisma/client";
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "../trpc";
@@ -7,6 +7,7 @@ const bookingCreateInput = z
   .array(
     z
       .object({
+        name: z.string(),
         personCount: z.number().positive(),
         vechileType: z.nativeEnum(ContingentVechileType),
         coordinator: z.object({
@@ -51,15 +52,20 @@ export const bookingRouter = createTRPCRouter({
       const prefixWithZeros = (number: number, length = 2) =>
         String(number).padStart(length, "0");
 
-      const cityCount = await ctx.prisma.booking.count({
+      const bookingCodePrefix = `${input.contingent[0].name}_${input.city.name}`;
+      const bookingCodeCount = await ctx.prisma.booking.aggregate({
+        _count: {
+          id: true,
+        },
         where: {
-          contingentAddress: {
-            is: {
-              city: input.city,
-            },
+          contingentName: {
+            contains: bookingCodePrefix,
           },
         },
       });
+      const bookingCode = `${bookingCodePrefix}_${prefixWithZeros(
+        bookingCodeCount._count.id + 1
+      )}`;
 
       const data = {
         booker: {
@@ -76,12 +82,13 @@ export const bookingRouter = createTRPCRouter({
           city: input.city,
           province: input.province,
         },
-        bookingCode: `${input.city.name}_${prefixWithZeros(cityCount + 1)}`,
+        bookingCode,
         contingentLeader: {
           name: input.contingent[0].coordinator.name,
           phone: input.contingent[0].coordinator.phone,
         },
         contingentVechile: input.contingent[0].vechileType,
+        contingentName: input.contingent[0].name,
         personCount: input.contingent[0].personCount,
       };
       let booking: Booking | undefined = undefined;
@@ -255,6 +262,29 @@ export const bookingRouter = createTRPCRouter({
       });
 
       return booking;
+    }),
+
+  filterContingentName: publicProcedure
+    .input(
+      z.object({
+        name: z.string(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const contingentNames = await ctx.prisma.booking.findMany({
+        where: {
+          contingentName: {
+            contains: input.name,
+            mode: "insensitive",
+          },
+        },
+        select: {
+          id: true,
+          contingentName: true,
+        },
+      });
+
+      return contingentNames;
     }),
 
   // getSecretMessage: protectedProcedure.query(() => {

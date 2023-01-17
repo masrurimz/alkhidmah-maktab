@@ -13,6 +13,7 @@ export interface BookingFormData {
 }
 
 export interface Contingent {
+  name: string;
   personCount: number;
   vechileType: ContingentVechileType;
   contingentCoordinatorName: string;

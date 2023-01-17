@@ -75,6 +75,7 @@ model Booking {
   personCount       Int
   bookingCode       String
   booker            Booker
+  contingentName    String                @default("")
   contingentAddress ContingentAddress
   contingentLeader  ContingentLeader
   contingentVechile ContingentVechileType
@@ -82,6 +83,7 @@ model Booking {
   regionCoordinator   RegionCoordiator @relation(fields: [regionCoordinatorId], references: [id])
   regionCoordinatorId String           @db.ObjectId
 
+  @@index([regionCoordinatorId, contingentName, bookingCode])
   @@map("bookings")
 }
 
