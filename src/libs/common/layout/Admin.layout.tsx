@@ -5,7 +5,7 @@ import {
 } from "@ant-design/icons";
 import { Breadcrumb, Layout, Menu, theme } from "antd";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
 
 const { Header, Sider, Content } = Layout;
@@ -13,11 +13,20 @@ const { Header, Sider, Content } = Layout;
 const AdminAppLayout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const { width } = useWindowSize();
+  const [collapsed, setCollapsed] = useState(width < 768 ? true : false);
   const {
     token: { colorBgContainer },
   } = theme.useToken();
   const router = useRouter();
+
+  useEffect(() => {
+    if (width < 768) {
+      setCollapsed(true);
+    } else {
+      setCollapsed(false);
+    }
+  }, [width]);
 
   return (
     <Layout className="h-screen">
