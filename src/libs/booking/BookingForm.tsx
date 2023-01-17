@@ -152,6 +152,7 @@ const BookingForm: React.FC = () => {
             contingentAddress,
             contingentLeader,
             contingentVechile,
+            contingentName,
             personCount,
             regionCoordinator,
           } = data;
@@ -167,6 +168,7 @@ const BookingForm: React.FC = () => {
                 contingentCoordinatorPhone: contingentLeader.phone,
                 personCount,
                 vechileType: contingentVechile,
+                name: contingentName,
               },
             ],
             regionCoordinatorName: regionCoordinator.name,
