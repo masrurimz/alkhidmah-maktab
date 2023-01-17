@@ -52,19 +52,19 @@ export const bookingRouter = createTRPCRouter({
       const prefixWithZeros = (number: number, length = 2) =>
         String(number).padStart(length, "0");
 
-      const bookingCodePrefix = `${input.contingent[0].name}_${input.city.name}`;
-      const bookingCodeCount = await ctx.prisma.booking.aggregate({
-        _count: {
-          id: true,
-        },
+      const cityFormatted = input.city.name.replace("KABUPATEN", "KAB.");
+      const bookingCodePrefix = `${input.contingent[0].name}_${cityFormatted}`;
+      const bookingCodeCount: number = await ctx.prisma.booking.count({
         where: {
-          contingentName: {
-            contains: bookingCodePrefix,
+          bookingCode: {
+            contains: bookingCodePrefix.toLowerCase(),
+            mode: "insensitive",
           },
         },
       });
+
       const bookingCode = `${bookingCodePrefix}_${prefixWithZeros(
-        bookingCodeCount._count.id + 1
+        bookingCodeCount + 1
       )}`;
 
       const data = {
