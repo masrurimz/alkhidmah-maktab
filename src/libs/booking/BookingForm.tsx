@@ -247,7 +247,10 @@ const BookingForm: React.FC = () => {
           </Space>
         }
       >
-        <Spin size="large" spinning={booking.isLoading}>
+        <Spin
+          size="large"
+          spinning={Boolean(booking.isLoading && selectedBookingId?.length)}
+        >
           <Form<BookingFormData>
             layout="vertical"
             requiredMark={false}
