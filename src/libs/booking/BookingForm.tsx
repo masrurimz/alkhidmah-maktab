@@ -212,6 +212,14 @@ const BookingForm: React.FC = () => {
   const contingentNames = api.booking.filterContingentName.useQuery({
     name: debounceContingentNameQuery,
   });
+  const contingentNamesUniqueSelectOptions = contingentNames.data
+    ? [...new Set(contingentNames.data?.map((c) => c.contingentName))].map(
+        (c) => ({
+          label: c,
+          value: c,
+        })
+      )
+    : [];
 
   return (
     <>
@@ -430,15 +438,10 @@ const BookingForm: React.FC = () => {
                                 ],
                               };
 
-                              console.log(data);
-
                               form.setFieldsValue(data);
                             }}
                             searchQuery={debounceContingentNameQuery}
-                            options={contingentNames.data?.map((c) => ({
-                              label: c.contingentName,
-                              value: c.contingentName,
-                            }))}
+                            options={contingentNamesUniqueSelectOptions}
                             onSearch={setContingentNameQuery}
                             loading={contingentNames.isLoading}
                           />
