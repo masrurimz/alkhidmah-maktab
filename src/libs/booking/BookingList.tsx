@@ -61,7 +61,7 @@ const BookingList: React.FC = () => {
 
   const columns: ColumnsType<BookingListType> = [
     {
-      title: "No.",
+      title: "Booking Code",
       dataIndex: "bookingCode",
       key: "id",
       responsive: ["sm"],
