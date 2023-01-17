@@ -118,11 +118,14 @@ const BookingList: React.FC = () => {
             </div>
             <div>
               <Typography.Text className="font-semibold">
-                Koor Daerah:{" "}
+                Koor Daerah:
               </Typography.Text>
-              <Typography.Text>{record.regionCoordinator.name}</Typography.Text>
+              <Typography.Text>
+                {" "}
+                {record.regionCoordinator.name}
+              </Typography.Text>
               <Typography.Text type="secondary">
-                ( {record.regionCoordinator.phone})
+                ({record.regionCoordinator.phone})
               </Typography.Text>
             </div>
             <div>
@@ -217,7 +220,7 @@ const BookingList: React.FC = () => {
     },
   ];
 
-  const { width } = useWindowSize();
+  const { width, height } = useWindowSize();
 
   return (
     <>
@@ -240,6 +243,7 @@ const BookingList: React.FC = () => {
               onChange={onChange}
               scroll={{
                 x: width > 576 ? 700 : undefined,
+                y: width > 576 ? height - 400 : undefined,
               }}
               loading={isLoading}
             />
