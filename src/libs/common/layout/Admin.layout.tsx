@@ -7,7 +7,7 @@ import {
 import { Breadcrumb, Layout, Menu, theme } from "antd";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import { useWindowSize } from "usehooks-ts";
+import { useWindowSize } from "../utils/window";
 
 const { Header, Sider, Content } = Layout;
 
@@ -33,7 +33,7 @@ const AdminAppLayout: React.FC<{ children: React.ReactNode }> = ({
     <Layout className="h-screen">
       <Sider
         breakpoint="lg"
-        collapsedWidth={useWindowSize().width < 768 ? 0 : 80}
+        collapsedWidth={width < 768 ? 0 : 80}
         trigger={null}
         collapsible
         collapsed={collapsed}

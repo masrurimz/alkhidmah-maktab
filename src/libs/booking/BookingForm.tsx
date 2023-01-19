@@ -15,8 +15,8 @@ import {
   Spin,
 } from "antd";
 import React, { useEffect } from "react";
-import { useWindowSize } from "usehooks-ts";
 import { api } from "../../utils/api";
+import { useWindowSize } from "../common/utils/window";
 import { useBookingStore } from "./booking.store";
 import { type BookingFormData } from "./booking.type";
 import SelectCustomOption from "./SelectCustomOption";

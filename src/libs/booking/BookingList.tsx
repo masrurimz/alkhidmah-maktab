@@ -1,5 +1,5 @@
 import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
-import type { RegionCoordiator, Booking } from "@prisma/client";
+import type { Booking, RegionCoordiator } from "@prisma/client";
 import {
   Button,
   Col,
@@ -13,8 +13,8 @@ import {
 } from "antd";
 import type { ColumnsType, TableProps } from "antd/es/table";
 import React, { useState } from "react";
-import { useWindowSize } from "usehooks-ts";
 import { api } from "../../utils";
+import { useWindowSize } from "../common/utils/window";
 import { useBookingStore } from "./booking.store";
 
 type BookingListType = Booking & {
