@@ -132,9 +132,9 @@ model RegionCoordiator {
 }
 
 enum ContingentVechileType {
-  CAR
+  ELF
+  MINI_BUS
   BUS
-  TRUCK
 }
 
 model MasterRegionIndonesiaProvince {

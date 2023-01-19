@@ -1,7 +1,7 @@
 import { Form, type FormInstance } from "antd";
 import { useEffect, useMemo } from "react";
 import { api } from "../../../utils";
-import type { BookingFormData } from "../booking.type";
+import type { AddressOption, BookingFormData } from "../booking.type";
 
 export const useBookingFormRegionData = (
   form: FormInstance<BookingFormData>
@@ -11,13 +11,13 @@ export const useBookingFormRegionData = (
   const { data: provincies, isLoading: isProvinciesLoading } =
     api.masterRegion.allProvince.useQuery();
 
-  const provinceData = useMemo(() => {
+  const provinceData: AddressOption[] = useMemo(() => {
     const province = provincies?.map((province) => ({
       value: province.id,
       label: province.name,
     }));
 
-    return province;
+    return province ?? [];
   }, [provincies]);
 
   const regenciesData = useMemo(() => {
@@ -32,8 +32,9 @@ export const useBookingFormRegionData = (
         label: regency.name,
       }));
 
-      return regencyData;
+      return regencyData ?? [];
     }
+
     return [];
   }, [provincies, selectedProvince]);
 

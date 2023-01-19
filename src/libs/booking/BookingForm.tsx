@@ -1,4 +1,5 @@
 import { CloseCircleTwoTone, PlusOutlined } from "@ant-design/icons";
+import { ContingentVechileType } from "@prisma/client";
 import {
   Button,
   Card,
@@ -13,15 +14,18 @@ import {
   Space,
   Spin,
 } from "antd";
-import React, { useEffect, useState } from "react";
-import { useDebounce, useWindowSize } from "usehooks-ts";
-import type { BookingCreateInput } from "../../server/api/routers/booking.router";
+import React, { useEffect } from "react";
+import { useWindowSize } from "usehooks-ts";
 import { api } from "../../utils/api";
-import { checkIsValidObjectId } from "../common/utils/objectId";
 import { useBookingStore } from "./booking.store";
 import { type BookingFormData } from "./booking.type";
-import { useBookingFormRegionData, useRegionCoordinatorData } from "./hooks";
 import SelectCustomOption from "./SelectCustomOption";
+import {
+  useBookingFormMutation,
+  useBookingFormRegionData,
+  useContingentNamesSearchQuery,
+  useRegionCoordinatorData,
+} from "./utils";
 
 const { Option } = Select;
 
@@ -29,36 +33,9 @@ const BookingForm: React.FC = () => {
   const isVisible = useBookingStore((state) => state.isBookingFormOpen);
   const onClose = useBookingStore((state) => state.closeBookingForm);
 
-  const apiUtils = api.useContext();
-
   const [messageApi, contextHolder] = message.useMessage();
 
   const [form] = Form.useForm<BookingFormData>();
-
-  const onSubmitSuccess = () => {
-    apiUtils.booking.getAll.invalidate();
-    form.resetFields();
-    onClose();
-  };
-
-  const createBooking = api.booking.create.useMutation({
-    onSuccess() {
-      messageApi.open({
-        type: "success",
-        content: "Berhasil menambahkan data Booking",
-      });
-      onSubmitSuccess();
-    },
-  });
-  const updateBooking = api.booking.update.useMutation({
-    onSuccess() {
-      messageApi.open({
-        type: "success",
-        content: "Berhasil memperbarui data Booking",
-      });
-      onSubmitSuccess();
-    },
-  });
 
   const { selectCustomOptionNameProps, selectCustomOptionPhoneProps } =
     useRegionCoordinatorData(form);
@@ -66,73 +43,12 @@ const BookingForm: React.FC = () => {
   const { provinceData, regenciesData, selectedProvince, isProvinciesLoading } =
     useBookingFormRegionData(form);
 
-  const handleSubmit = (value: BookingFormData) => {
-    const cityName = regenciesData?.find(
-      (regency) => regency.value === value.city
-    )?.label;
-    const provinceName = provinceData?.find(
-      (province) => province.value === value.province
-    )?.label;
-
-    const contingentArr = value.contingents.map((contingent) => ({
-      coordinator: {
-        name: contingent.contingentCoordinatorName,
-        phone: contingent.contingentCoordinatorPhone,
-      },
-      personCount: contingent.personCount,
-      vechileType: contingent.vechileType,
-      name: contingent.name,
-    })) as BookingCreateInput;
-
-    if (contingentArr.length === 0) {
-      return;
-    }
-
-    const contingents: BookingCreateInput = contingentArr;
-
-    if (
-      !(contingents.length > 0) ||
-      !value.contingents[0] ||
-      !cityName ||
-      !provinceName
-    ) {
-      return;
-    }
-
-    const data = {
-      booker: {
-        name: value.bookerName,
-        phone: value.bookerPhone,
-      },
-      city: {
-        id: value.city,
-        name: cityName,
-      },
-      province: {
-        id: value.province,
-        name: provinceName,
-      },
-      contingent: contingents,
-      regionCoordinator: {
-        id:
-          checkIsValidObjectId(value.regionCoordinatorName) &&
-          checkIsValidObjectId(value.regionCoordinatorPhone)
-            ? value.regionCoordinatorName
-            : undefined,
-        name: value.regionCoordinatorName,
-        phone: value.regionCoordinatorPhone,
-      },
-    };
-
-    if (selectedBookingId) {
-      return updateBooking.mutate({
-        id: selectedBookingId,
-        ...data,
-      });
-    }
-
-    createBooking.mutate(data);
-  };
+  const { createBooking, handleSubmit, updateBooking } = useBookingFormMutation(
+    form,
+    messageApi,
+    provinceData,
+    regenciesData
+  );
 
   const selectedBookingId = useBookingStore((state) => state.selectedBookingId);
   const booking = api.booking.byId.useQuery(
@@ -210,24 +126,22 @@ const BookingForm: React.FC = () => {
   };
   const { width } = useWindowSize();
 
-  const [contingentNameQuery, setContingentNameQuery] = useState("");
-  const debounceContingentNameQuery = useDebounce(contingentNameQuery, 300);
-  const contingentNames = api.booking.filterContingentName.useQuery({
-    name: debounceContingentNameQuery,
-  });
-  const contingentNamesUniqueSelectOptions = contingentNames.data
-    ? [...new Set(contingentNames.data?.map((c) => c.contingentName))].map(
-        (c) => ({
-          label: c,
-          value: c,
-        })
-      )
-    : [];
+  const {
+    contingentNamesUniqueSelectOptions,
+    debounceContingentNameQuery,
+    setContingentNameQuery,
+    contingentNames,
+  } = useContingentNamesSearchQuery();
+
+  const vehicleTypeLabelMap: Record<ContingentVechileType, string> = {
+    BUS: "Bis (>= 30 orang)",
+    MINI_BUS: "Bis mini (30 orang)",
+    ELF: "Elf (15 orang)",
+  };
 
   return (
     <>
       {contextHolder}
-
       <Drawer
         title="Tambahkan data Booking"
         width={width > 768 ? 720 : "100%"}
@@ -497,7 +411,13 @@ const BookingForm: React.FC = () => {
                             ]}
                           >
                             <Select placeholder="Silahkan pilih jenis kendaraan">
-                              <Option key="BUS">Bus</Option>
+                              {Object.values(ContingentVechileType).map(
+                                (vechileType) => (
+                                  <Option key={vechileType}>
+                                    {vehicleTypeLabelMap[vechileType]}
+                                  </Option>
+                                )
+                              )}
                             </Select>
                           </Form.Item>
                         </Col>

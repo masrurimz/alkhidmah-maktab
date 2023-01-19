@@ -19,3 +19,8 @@ export interface Contingent {
   contingentCoordinatorName: string;
   contingentCoordinatorPhone: string;
 }
+
+export interface AddressOption {
+  value: string;
+  label: string;
+}
