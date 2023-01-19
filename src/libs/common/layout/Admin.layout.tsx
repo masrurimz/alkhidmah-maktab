@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  BankOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
@@ -48,6 +49,12 @@ const AdminAppLayout: React.FC<{ children: React.ReactNode }> = ({
               icon: <BookOutlined />,
               label: "Booking",
               onClick: () => router.push("/admin/booking"),
+            },
+            {
+              key: "/admin/maktab",
+              icon: <BankOutlined />,
+              label: "Maktab",
+              onClick: () => router.push("/admin/maktab"),
             },
           ]}
         />

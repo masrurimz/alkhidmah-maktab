@@ -1,7 +1,8 @@
 import React from "react";
+import { Maktab as MaktabFeature } from "../../libs/maktab";
 
 function Maktab() {
-  return <div>Maktab</div>;
+  return <MaktabFeature />;
 }
 
 export default Maktab;
